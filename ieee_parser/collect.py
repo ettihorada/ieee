@@ -58,6 +58,7 @@ def main():
         client.maximum_results(args.max_records)
         client.query_text('re')
     else:
+        raise NotImplementedError("Collecting by date wasn't implemented")
         client.search_latest(args.from_date, args.to_date)
 
     data = client.run()
