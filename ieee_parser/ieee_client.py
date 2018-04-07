@@ -2,11 +2,7 @@ import math
 import urllib
 import urllib2
 import pprint
-
-try:
-    import simplejson as json
-except ImportError:
-    import json
+import json
 
 
 class IeeeClient(object):
@@ -14,41 +10,41 @@ class IeeeClient(object):
     # API endpoint
     __BASEURL = "http://ieeexploreapi.ieee.org/api/v1/search/articles"
 
-    def __init__(self, apiKey):
-        self.apiKey = apiKey
+    def __init__(self, api_key):
+        self.api_key = api_key
 
         # flag that some search criteria has been provided
-        self.queryProvided = False
+        self.query_provided = False
 
         # flag that article number has been provided, which overrides all other search criteria
-        self.usingArticleNumber = False
+        self.using_article_number = False
 
         # flag that a boolean method is in use
-        self.usingBoolean = False
+        self.using_boolean = False
 
         # flag that a facet is in use
-        self.usingFacet = False
+        self.using_facet = False
 
         # flag that a facet has been applied, in the event that multiple facets are passed
-        self.facetApplied = False
+        self.facet_applied = False
 
         # default of 25 results returned
-        self.resultSetMax = 25
+        self.result_set_max = 25
 
         # maximum of 200 results returned
-        self.resultSetMaxCap = 200
+        self.result_set_max_cap = 1000
 
         # records returned default to position 1 in result set
-        self.startRecord = 1
+        self.start_record = 1
 
         # default sort order is ascending; could also be 'desc' for descending
-        self.sortOrder = 'asc'
+        self.sort_order = 'asc'
 
         # field name that is being used for sorting
-        self.sortField = 'article_title'
+        self.sort_field = 'article_title'
 
         # array of permitted search fields for searchField() method
-        self.allowedSearchFields = ['abstract', 'affiliation', 'article_number', 'article_title', 'author', 'boolean_text', 'content_type', 'd-au', 'd-pubtype', 'd-publisher', 'd-year', 'doi', 'end_year', 'facet', 'index_terms', 'isbn', 'issn', 'is_number', 'meta_data', 'open_access', 'publication_number', 'publication_title', 'publication_year', 'publisher', 'querytext', 'start_year', 'thesaurus_terms']
+        self.allowed_search_fields = ['abstract', 'affiliation', 'article_number', 'article_title', 'author', 'boolean_text', 'content_type', 'd-au', 'd-pubtype', 'd-publisher', 'd-year', 'doi', 'end_year', 'facet', 'index_terms', 'isbn', 'issn', 'is_number', 'meta_data', 'open_access', 'publication_number', 'publication_title', 'publication_year', 'publisher', 'querytext', 'start_year', 'thesaurus_terms']
 
         # dictionary of all search parameters in use and their values
         self.parameters = {}
@@ -57,7 +53,7 @@ class IeeeClient(object):
         self.filters = {}
 
     def starting_result(self, start):
-        self.startRecord = math.ceil(start) if (start > 0) else 1
+        self.start_record = math.ceil(start) if (start > 0) else 1
 
     def maximum_results(self, maximum):
         """
@@ -65,9 +61,9 @@ class IeeeClient(object):
         :param maximum: int
         :return:
         """
-        self.resultSetMax = math.ceil(maximum) if (maximum > 0) else 25
-        if self.resultSetMax > self.resultSetMaxCap:
-            self.resultSetMax = self.resultSetMaxCap
+        self.result_set_max = int(math.ceil(maximum)) if (maximum > 0) else 25
+        if self.result_set_max > self.result_set_max_cap:
+            self.result_set_max = self.result_set_max_cap
 
     def results_filter(self, filter_param, value):
         """
@@ -80,7 +76,7 @@ class IeeeClient(object):
 
         if len(value) > 0:
             self.filters[filter_param] = value
-            self.queryProvided = True
+            self.query_provided = True
 
             # Standards do not have article titles, so switch to sorting by article number
             if filter_param == 'content_type' and value == 'Standards':
@@ -94,8 +90,8 @@ class IeeeClient(object):
         """
         field = field.strip().lower()
         order = order.strip()
-        self.sortField = field
-        self.sortOrder = order
+        self.sort_field = field
+        self.sort_order = order
 
     def search_field(self, field, value):
         """
@@ -104,7 +100,7 @@ class IeeeClient(object):
         :param value: Text to query
         """
         field = field.strip().lower()
-        if field in self.allowedSearchFields:
+        if field in self.allowed_search_fields:
             self.__add_parameter(field, value)
         else:
             print "Searches against field " + field + " are not supported"
@@ -213,21 +209,21 @@ class IeeeClient(object):
             self.parameters[parameter]=value
 
             # viable query criteria provided
-            self.queryProvided = True
+            self.query_provided = True
             # set flags based on parameter
             if parameter == 'article_number':
-                self.usingArticleNumber = True
+                self.using_article_number = True
 
             if parameter == 'boolean_text':
-                self.usingBoolean = True
+                self.using_boolean = True
 
             if parameter == 'facet' or parameter == 'd-au' or parameter == 'd-year' or parameter == 'd-pubtype' or parameter == 'd-publisher':
-                self.usingFacet = True
+                self.using_facet = True
 
     def run(self):
         set_url = self.build_query()
 
-        if self.queryProvided is False:
+        if self.query_provided is False:
             print "No search criteria provided"
 
         return IeeeClient._format_data(IeeeClient._query_api(set_url))
@@ -239,27 +235,27 @@ class IeeeClient(object):
         """
         url = self.__BASEURL
 
-        url += '?apikey=' + str(self.apiKey)
-        url += '&max_records=' + str(self.resultSetMax)
-        url += '&start_record=' + str(self.startRecord)
-        url += '&sort_order=' + str(self.sortOrder)
-        url += '&sort_field=' + str(self.sortField)
+        url += '?apikey=' + str(self.api_key)
+        url += '&max_records=' + str(self.result_set_max)
+        url += '&start_record=' + str(self.start_record)
+        url += '&sort_order=' + str(self.sort_order)
+        url += '&sort_field=' + str(self.sort_field)
         url += '&format=json'
 
         # add in search criteria
         # article number query takes priority over all others
-        if self.usingArticleNumber:
+        if self.using_article_number:
             url += '&article_number=' + str(self.parameters['article_number'])
 
         # boolean query
-        elif self.usingBoolean:
+        elif self.using_boolean:
             url += '&querytext=(' + urllib.quote_plus(self.parameters['boolean_text']) + ')'
 
         else:
             for key in self.parameters:
-                if self.usingFacet and self.facetApplied is False:
+                if self.using_facet and self.facet_applied is False:
                     url += '&querytext=' + urllib.quote_plus(self.parameters[key]) + '&facet=' + key
-                    self.facetApplied = True
+                    self.facet_applied = True
                 else:
                     url += '&' + key + '=' + urllib.quote_plus(self.parameters[key])
 
@@ -286,43 +282,27 @@ class IeeeClient(object):
         :param data: result string
         :return:
         """
-        return json.loads(data)
+        _TRANS = {
+            "abstract": lambda d: d,
+            "title": lambda d: d,
+            "pdf_url": lambda d: d,
+            "authors": lambda d: [auth["full_name"] for auth in d["authors"]],
+            "index_terms": lambda d: IeeeClient.__decode_index_terms(d),
+            "publication_title": lambda d: d,
+            "conference_dates": lambda d: d
+        }
+        origin = json.loads(data)
+        new_response = []
+        for art in origin["articles"]:
+            new_response.append({k: _TRANS[k](v) for k, v in art.iteritems() if k in _TRANS})
+        return new_response
 
-
-def __decode_index_terms(d):
-    try:
-        return d["ieee_terms"]["terms"]
-    except TypeError:
-        return dict()
-
-
-class ParamsDecoder(json.JSONDecoder):
-
-    _TRANS = {
-        "abstract": lambda d: d,
-        "title": lambda d: d,
-        "pdf_url": lambda d: d,
-        "authors": lambda d: d["authors"],
-        "index_terms": lambda d: __decode_index_terms(d),
-        "publication_title": lambda d: d,
-        "conference_dates": lambda d: d
-    }
-
-    def __init__(self, *args, **kwargs):
-        super(ParamsDecoder, self).__init__(object_hook=self.object_hook, *args, **kwargs)
-
-    def object_hook(self, dictionary):
-        print(dictionary)
-        # raw_input("...")
-        # l = []
-        # for element in dictionary["articles"]:
-        #     d = dict()
-        #     for k, v in ParamsDecoder._TRANS.iteritems():
-        #         if k in element:
-        #             d[k] = v(element[k])
-        #     l.append(d)
-        #
-        # return d
+    @staticmethod
+    def __decode_index_terms(d):
+        try:
+            return d["ieee_terms"]["terms"]
+        except (TypeError, KeyError):
+            return dict()
 
 
 if __name__ == "__main__":
@@ -330,7 +310,9 @@ if __name__ == "__main__":
     query = IeeeClient('gg6gz9zkeqw6nbrkj7dg692t')
     # query.query_text('(International%20Requirements%20Engineering%20Conference%20.LB.RE.RB.)')
     query.query_text('re')
+    query.maximum_results(500)
     data = query.run()
+    print(len(data))
 
     # query.outputDataFormat = "object"
     pprint.pprint(data, indent=1)
