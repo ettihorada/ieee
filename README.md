@@ -1,14 +1,27 @@
 # ieee_parser
 
-collect --apikey '' --bootstrap
-all articals from begining till today
--- SEARCH ONLY RE 
 
-collect --apikey '' --from-date <> --to-date <>
-all articals from date to date
+Prerequisites
+=============
+* python 2.7 installed
+* git installed
 
--- SEARCH ONLY FOR RE  THIS YEAR 
+Installation
+============
+* git clone https://github.com/avi3tal/ieee_parser.git
+* cd ieee_parser
+* python setup.py install
 
-need to find  -->
-title - keywords - abstract - authors 
-for every article - even if locked
+note: now we will have ieee.py application cli installed locally
+
+Usage
+=====
+Single execution example
+ieee.py -a <apikey> -b -o </path/to/output.json>
+
+note: once the application is installed locally we can easily 
+use it as cron job in our file system
+
+
+The easiest way would be to collect all 500 articles per day and do the union
+as part of the SQL implementation
