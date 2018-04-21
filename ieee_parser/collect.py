@@ -2,28 +2,30 @@
 import argparse
 import json, codecs
 from ieee_client import IeeeClient
+from sqlalchemy import create_engine
 
 # import MySQLdb
 
-# class LocalSQL:
-#     host = ""
-#     user = ""
-#     password = ""
-#     db = ""
-#
-#
-# def port_to_sql(list_of_articles):
-#
-#     for ar in list_of_articles["articles"]:
-#         print("i am inserting {}".format(ar))
-#
-#     conn = MySQLdb.connect(host=LocalSQL.host,
-#                            user=LocalSQL.user,
-#                            passwd=LocalSQL.password,
-#                            db=LocalSQL.db)
-#     cursor = conn.cursor()
-#     for article in list_of_articles:
-#         cursor.execute("INSERT INTO ieee (abstract, title, pdf_url, authors, index_terms, publication_title, conference_dates) VALUES ({abstract},{title},{pdf_url},{authors},{index_terms},{publication_title}, {conference_dates})".format(**article))
+SQL_PARAMS = {
+    "host_name": "",
+    "user_name": "",
+    "password": "",
+    "database": ""
+}
+
+
+def port_to_sql(list_of_articles):
+    # engine = create_engine("mysql://{user_name}:{password}@{host_name}/{database}".format(**SQL_PARAMS))
+    engine = create_engine('sqlite:////Users/avital/Ieee.db')
+    conn = engine.connect()
+
+    terms = set([term for article in list_of_articles for term in article["index_terms"]])
+    for term in terms:
+        conn.execute("INSERT INTO Keywords (twxt) VALUES (\'{}\')".format(term))
+
+
+    # conn.execute("INSERT INTO Keywords (abstract, title, pdf_url, authors, index_terms, publication_title, conference_dates) VALUES ({abstract},{title},{pdf_url},{authors},{index_terms},{publication_title}, {conference_dates})".format(**article))
+
 
 def main():
     parser = argparse.ArgumentParser(description='Run ieee collector')
@@ -48,7 +50,12 @@ def main():
                         default=500,
                         help='Up to 1000 records are allowed')
     parser.add_argument('-o', '--output',
-                        required=True,
+                        required=False,
+                        default=None,
+                        help='File path to output of desired RE articles from ieee')
+    parser.add_argument('-d', '--db',
+                        action='store_true',
+                        default=False,
                         help='File path to output of desired RE articles from ieee')
 
     args = parser.parse_args()
@@ -63,9 +70,14 @@ def main():
 
     data = client.run()
 
-    with open(args.output, 'wb') as f:
-        json.dump(data, codecs.getwriter('utf-8')(f), ensure_ascii=False)
-    # port_to_sql(client.run())
+    if args.db:
+        port_to_sql(data)
+    elif args.output is not None:
+        with open(args.output, 'wb') as f:
+            json.dump(data, codecs.getwriter('utf-8')(f), ensure_ascii=False)
+    else:
+        import pprint
+        pprint.pprint(data)
 
 
 if __name__ == "__main__":
