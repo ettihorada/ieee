@@ -1,6 +1,6 @@
 import math
 import urllib
-import urllib2
+import urllib3 as urllib2
 import pprint
 import json
 
@@ -103,7 +103,7 @@ class IeeeClient(object):
         if field in self.allowed_search_fields:
             self.__add_parameter(field, value)
         else:
-            print "Searches against field " + field + " are not supported"
+            print("Searches against field " + field + " are not supported")
 
     def abstract_text(self, value):
         self.__add_parameter('abstract', value)
@@ -224,9 +224,9 @@ class IeeeClient(object):
         set_url = self.build_query()
 
         if self.query_provided is False:
-            print "No search criteria provided"
+            print("No search criteria provided")
 
-        return IeeeClient._format_data(IeeeClient._query_api(set_url))
+        return IeeeClient._format_data(self._query_api(set_url))
 
     def build_query(self):
         """
@@ -249,15 +249,15 @@ class IeeeClient(object):
 
         # boolean query
         elif self.using_boolean:
-            url += '&querytext=(' + urllib.quote_plus(self.parameters['boolean_text']) + ')'
+            url += '&querytext=(' + self.parameters['boolean_text'] + ')'
 
         else:
             for key in self.parameters:
                 if self.using_facet and self.facet_applied is False:
-                    url += '&querytext=' + urllib.quote_plus(self.parameters[key]) + '&facet=' + key
+                    url += '&querytext=' + self.parameters[key] + '&facet=' + key
                     self.facet_applied = True
                 else:
-                    url += '&' + key + '=' + urllib.quote_plus(self.parameters[key])
+                    url += '&' + key + '=' + self.parameters[key]
 
         # add in filters
         for key in self.filters:
@@ -265,15 +265,16 @@ class IeeeClient(object):
 
         return url
 
-    @staticmethod
-    def _query_api(url):
+    def _query_api(self, url):
         """
         creates the URL for the API call
         string url  Full URL to pass to API
         return string: Results from API
         :param url:
         """
-        return urllib2.urlopen(url).read()
+        http = urllib2.PoolManager()
+        print(url)
+        return http.request(method="GET", url=url).data
 
     @staticmethod
     def _format_data(data):
@@ -294,7 +295,7 @@ class IeeeClient(object):
         origin = json.loads(data)
         new_response = []
         for art in origin["articles"]:
-            new_response.append({k: _TRANS[k](v) for k, v in art.iteritems() if k in _TRANS})
+            new_response.append({k: _TRANS[k](v) for k, v in art.items() if k in _TRANS})
         return new_response
 
     @staticmethod
