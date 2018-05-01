@@ -1,27 +1,28 @@
 
 import argparse
 import json, codecs
-from ieee_client import IeeeClient
+from ieee_parser.ieee_client import IeeeClient
 from sqlalchemy import create_engine
 
-# import MySQLdb
-
 SQL_PARAMS = {
-    "host_name": "",
-    "user_name": "",
+    "host_name": "localhost",
+    "user_name": "root",
     "password": "",
-    "database": ""
+    "database": "ieeeconfs"
 }
-
-
+# DB NAME ieeeconfs
 def port_to_sql(list_of_articles):
-    # engine = create_engine("mysql://{user_name}:{password}@{host_name}/{database}".format(**SQL_PARAMS))
-    engine = create_engine('sqlite:////Users/avital/Ieee.db')
+    engine = create_engine("mysql://{user_name}@{host_name}/{database}".format(**SQL_PARAMS))
     conn = engine.connect()
 
     terms = set([term for article in list_of_articles for term in article["index_terms"]])
     for term in terms:
-        conn.execute("INSERT INTO Keywords (twxt) VALUES (\'{}\')".format(term))
+        conn.execute("INSERT INTO Keywords (text) VALUES (\'{}\')".format(term))
+
+    full_name = set([auter for article in list_of_articles for auter in article["authors"]])
+    for auter in full_name:
+        conn.execute("INSERT INTO authors (FullName) VALUES (\'[{}]\')".format(auter))
+
 
 
     # conn.execute("INSERT INTO Keywords (abstract, title, pdf_url, authors, index_terms, publication_title, conference_dates) VALUES ({abstract},{title},{pdf_url},{authors},{index_terms},{publication_title}, {conference_dates})".format(**article))
@@ -58,7 +59,7 @@ def main():
                         default=False,
                         help='File path to output of desired RE articles from ieee')
 
-    args = parser.parse_args()
+    args = parser.parse_args(["-a", "gg6gz9zkeqw6nbrkj7dg692t", "-b", "-db"])
 
     client = IeeeClient(args.apikey)
     if args.bootstrap:
